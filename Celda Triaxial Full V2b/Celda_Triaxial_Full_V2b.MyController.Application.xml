@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Symbolconfiguration xmlns="http://www.3s-software.com/schemas/Symbolconfiguration.xsd">
+  <Header>
+    <Version>3.5.14.0</Version>
+    <SymbolConfigObject version="3.5.16.30" runtimeid="3.5.16.90" libversion="3.5.16.0" compiler="3.5.16.90" lmm="3.5.16.0" profile="V21.0.22.0" settings="LayoutCalculator=OptimizedClientSideLayoutCalculator" />
+    <ProjectInfo name="Celda_Triaxial_Full_V2b" devicename="MyController" appname="Application" />
+  </Header>
+  <TypeList>
+    <TypeSimple name="T_BOOL" size="1" swapsize="0" typeclass="Bool" iecname="BOOL" />
+    <TypeSimple name="T_INT" size="2" swapsize="2" typeclass="Int" iecname="INT" />
+    <TypeSimple name="T_REAL" size="4" swapsize="4" typeclass="Real" iecname="REAL" />
+    <TypeSimple name="T_WSTRING" size="162" swapsize="2" typeclass="WString" iecname="WSTRING" />
+    <TypeArray name="T_ARRAY__0__511__OF_INT" size="1024" nativesize="1024" typeclass="Array" iecname="ARRAY [0..511] OF INT" basetype="T_INT">
+      <ArrayDim minrange="0" maxrange="511" />
+    </TypeArray>
+    <TypeArray name="T_ARRAY__0__5__OF_REAL" size="24" nativesize="24" typeclass="Array" iecname="ARRAY [0..5] OF REAL" basetype="T_REAL">
+      <ArrayDim minrange="0" maxrange="5" />
+    </TypeArray>
+  </TypeList>
+  <NodeList>
+    <Node name="Application">
+      <Node name="SR_Main">
+        <Node name="AlturaProbeta" type="T_REAL" access="ReadWrite" />
+        <Node name="AvanceMm" type="T_REAL" access="ReadWrite" />
+        <Node name="CantEtapas" type="T_INT" access="ReadWrite" />
+        <Node name="Conectado" type="T_BOOL" access="ReadWrite" />
+        <Node name="Contador" type="T_INT" access="ReadWrite" />
+        <Node name="DefAxialUe" type="T_REAL" access="ReadWrite" />
+        <Node name="DefAxialUeSDevUnidadInt" type="T_ARRAY__0__511__OF_INT" access="ReadWrite" />
+        <Node name="DefRadialUe" type="T_REAL" access="ReadWrite" />
+        <Node name="DefVolUe" type="T_REAL" access="ReadWrite" />
+        <Node name="DefVolUeSDevUnidadInt" type="T_ARRAY__0__511__OF_INT" access="ReadWrite" />
+        <Node name="DiametroProbeta" type="T_REAL" access="ReadWrite" />
+        <Node name="Emergencia" type="T_BOOL" access="ReadWrite" />
+        <Node name="EmergenciaSoft" type="T_BOOL" access="ReadWrite" />
+        <Node name="Estado" type="T_INT" access="ReadWrite" />
+        <Node name="FAxialKN" type="T_REAL" access="ReadWrite" />
+        <Node name="FAxialUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="Fuerza0oTension1Ultrasonicos" type="T_BOOL" access="ReadWrite" />
+        <Node name="FuerzaAxialUltrasonicos" type="T_REAL" access="ReadWrite" />
+        <Node name="FuerzaAxialUltrasonicosLimite" type="T_REAL" access="ReadWrite" />
+        <Node name="iEtapa" type="T_INT" access="ReadWrite" />
+        <Node name="iPlot" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTExterno" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTExternoAbajo" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTExternoInit" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTExtInitCompresion" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTInterno1" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTInterno1Init" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTInterno2" type="T_INT" access="ReadWrite" />
+        <Node name="LVDTInterno2Init" type="T_INT" access="ReadWrite" />
+        <Node name="maxDefAxial" type="T_INT" access="ReadWrite" />
+        <Node name="maxDefVol" type="T_INT" access="ReadWrite" />
+        <Node name="maxSDev" type="T_INT" access="ReadWrite" />
+        <Node name="minDefAxial" type="T_INT" access="ReadWrite" />
+        <Node name="minDefVol" type="T_INT" access="ReadWrite" />
+        <Node name="minSDev" type="T_INT" access="ReadWrite" />
+        <Node name="Motor1" type="T_BOOL" access="ReadWrite" />
+        <Node name="Motor2" type="T_BOOL" access="ReadWrite" />
+        <Node name="NombreEnsayo" type="T_WSTRING" access="ReadWrite" />
+        <Node name="ParadaEmergencia" type="T_BOOL" access="ReadWrite" />
+        <Node name="PConfUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="PPistonMaxUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="PPistonUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="PresionEtapas" type="T_ARRAY__0__5__OF_REAL" access="ReadWrite" />
+        <Node name="PresionEtapasMax" type="T_REAL" access="ReadWrite" />
+        <Node name="PulsRojo" type="T_BOOL" access="ReadWrite" />
+        <Node name="PulsVerde" type="T_BOOL" access="ReadWrite" />
+        <Node name="PulsVerdeOk" type="T_BOOL" access="ReadWrite" />
+        <Node name="RutinaPostEnsayoOk" type="T_BOOL" access="ReadWrite" />
+        <Node name="SAxialUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevLimite" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevLimiteMax" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevLimiteXDefecto" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevUltrasonicos" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevUltrasonicosLimite" type="T_REAL" access="ReadWrite" />
+        <Node name="SDevUnidad" type="T_REAL" access="ReadWrite" />
+        <Node name="SensoresOk" type="T_BOOL" access="ReadWrite" />
+        <Node name="SensPresionConf" type="T_INT" access="ReadWrite" />
+        <Node name="SensPresionPiston" type="T_INT" access="ReadWrite" />
+        <Node name="SetupOk" type="T_BOOL" access="ReadWrite" />
+        <Node name="SG1" type="T_INT" access="ReadWrite" />
+        <Node name="SG1Init" type="T_INT" access="ReadWrite" />
+        <Node name="SG2" type="T_INT" access="ReadWrite" />
+        <Node name="SG2Init" type="T_INT" access="ReadWrite" />
+        <Node name="TipoEnsayo" type="T_INT" access="ReadWrite" />
+        <Node name="triggerPlot" type="T_BOOL" access="ReadWrite" />
+        <Node name="UnidadPresion" type="T_INT" access="ReadWrite" />
+        <Node name="ValoresEnsayoOk" type="T_BOOL" access="ReadWrite" />
+        <Node name="ValvPresionConf" type="T_INT" access="ReadWrite" />
+        <Node name="ValvPresionPiston" type="T_INT" access="ReadWrite" />
+        <Node name="ValvulasEn0" type="T_BOOL" access="ReadWrite" />
+        <Node name="VelDeformacion" type="T_REAL" access="ReadWrite" />
+        <Node name="VelDeformacionMax" type="T_REAL" access="ReadWrite" />
+        <Node name="VelDeformacionXDefecto" type="T_REAL" access="ReadWrite" />
+        <Node name="VelPConf" type="T_REAL" access="ReadWrite" />
+        <Node name="VelPConfMax" type="T_REAL" access="ReadWrite" />
+        <Node name="VelPConfXDefecto" type="T_REAL" access="ReadWrite" />
+      </Node>
+    </Node>
+  </NodeList>
+</Symbolconfiguration>

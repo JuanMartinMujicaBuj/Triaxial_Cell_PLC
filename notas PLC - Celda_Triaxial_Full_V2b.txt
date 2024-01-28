@@ -1,0 +1,441 @@
+ALGUNAS NOTAS SUELTAS
+-----------------------------------------------------------------------
+El PLC se programa con Ecostruxure Machine Expert (actualmente version V2.1). La HMI se programa con Vijeo Designer, que se abre desde dentro del Machine Expert.
+
+La carpeta Celda Triaxial Full V2b contiene el programa del PLC. Luego de instalar el Machine Expert (atencion! la version gratuita/trial, con la que alcanza para la programacion, dura 42 dias), se puede abrir el programa con doble click desde el archivo Celda_Triaxial_Full_V2b.project, o abriendo Machine Expert, yendo a Open y buscando este archivo.
+
+La carpeta imagenes no estoy seguro si hace falta que esté, pero contiene las imagenes usadas para los panels de la HMI.
+
+El programa que está cargado se puede ejecutar así como está, o tambien se puede ejecutar con la compu conectada y logueada, para ver el estado de las variables en vivo y debuggear.
+
+"Configuraciones varias dentro del Machine Expert + Vijeo Designer.jpg" tienen detalles que se deben configurar antes de poder cargar un nuevo programa, o conectarse con la compu mientras se ejecuta el programa existente como para debuggear y ver variables en vivo desde el programa.
+
+Para subir un programa y/o conectarse con la compu al PLC: enchufar el PLC a una toma de electricidad, enchufar el PLC con la compu via el cable usb blanco que ya esta enchufado al PLC, abrir el Machine Expert y el Vijeo Designer en la compu. Abrir el programa deseado. Fijarse por las dudas que el programa compile (build-->build all, tanto en el Machine Expert como en el Vijeo Designer). Ocuparse de todo lo que dice en "Configuraciones varias dentro del Machine Expert + Vijeo Designer.jpg". Ir a login u online (no me acuerdo el nombre exacto del boton, pero esta arriba tirando a la derecha, un simbolito de un engranaje). El programa pide presionar alt+F, si pide usuario y contraseña, son siempre TRICEL. Una vez logueado: si solo se quiere ver el programa viejo en accion, se le puede dar play al programa (si no es que se pone solo). Si se quiere cargar un nuevo programa, van a saltar carteles hablando de descargarlo (se refiere a descargarlo *DE LA COMPU AL PLC*), darle ok a la opcion que esté seleccionada (entre try online download, download full program, u opciones de ese estilo). En caso de no saltar dichos carteles, o de hacer un cambio en el programa en ese momento, se puede ir arriba en la pantalla a Online-->Download All, o una opcion por el estilo. Deberia saltar un cartel que pregunta si quiere descargar (o sea, cargar al PLC) el programa del ME y/o del VD. Se pueden descargar ambos sin miedo.
+
+Si hacen falta actualizaciones de versiones de software del Machine Expert, suerte. En su momento nosotros lo actualizamos probando, como pudimos.
+
+A continuacion, notas sobre el programa.
+-----------------------------------------------------------------------
+Main tiene todas las declaraciones de variables y el Grafcet
+
+Cada bloque es un ladder o un structured text que se deberia ejecutar solo cuando estoy en ese bloque
+
+El programa Grafcet A GRANDES RASGOS es bastante lineal. Inicia, pide variables, las procesa. Elige la rama del tipo de ensayo elegido (Triaxial, Uniaxial, Ultrasonico) y va cambiando de estados (subidaPConf, AproxPiston, Compresion, Descompresion, BajadaPiston, BajadaPConf, rutinaPostEnsayoUniaxial. Algunas de todas esas). En paralelo, se ejecuta un bloque de impresion de data del ensayo en un archivo .log en una tarjeta SD, y otro bloque que traduce los inputs de los sensores a variables.
+Uniaxial y Ultrasonico tienen una sola etapa, mientras que Triaxial tiene varias subidasPConf-AproxPiston-(des)Compresion-etc.
+Cuando terminan, se asegura que las valvulas de PConf y PPiston esten en 0 y se pasa al bloque de finalizar ensayo, que lo unico que hace es resetear todas las variables (muchos reseteos son redundantes pero por las dudas).
+
+Lo que si complica el asunto es que en paralelo, esta corriendo la HMI con sus pantallitas. La HMI comparte muuuchas variables con todo el programa en el Grafcet y por medio de estas, interactuan entre si. Los parametros del ensayo se ingresan por la HMI, y a medida que avanzo en los bloques del Grafcet, cambia la pantalla que muestro. A veces (sobre todo al comienzo), la pantalla cambia porque yo le doy a un boton de "Siguiente". Pero durante los controles de presion y compresion, cambia mas que nada porque va cambiando el valor de una variable "Estado", que se refiere al estado del ensayo (subidaPConf, bajadaPConf, aprox/retroceso piston, compresion/descompresion, etc).
+
+Las valvulas y los sensores trabajan con bits, hay una mezcla que trate de hacer lo mas prolija posible de variables en bits, en MPa-mm-microstrain, y en la unidad que elija el usuario que usa la HMI (bar, MPa, psi; y kN, lb).
+
+Hay function blocks que generan rampas de un valor objetivo de presion de confinamiento (o rara vez de piston), de avance del piston, y de deformacion axial a seguir.
+Lo trato de seguir con un PID (feedback), mas con la cuenta de cuantos bits le debo mandar a las valvulas para obtener cierta presion medida en bits en los sensores, o para equilibrar las fuerzas y que el piston se mueva solo por el PID (feedforward).
+
+Durante la compresion, hay en la HMI un GraphXY que no probe, trate de copiar de lo que quedo del proyecto anterior, y es bastante chino. Espero haberlo hecho bien pero heads up con eso.
+
+Otra cosa a notar de los paneles de la HMI es que 1.los botones permiten setear un bit, cambiar de panel, o tambien meterles un script con ifs y cosas levemente mas complejas, y 2.ademas de las acciones que hacen los botones, el panel mismo permite agregar acciones a realizar cuando se da cierta condicion, o cuando una variable cambia de estado (cuando algo lo triggerea). Con esto puedo cambiar de panel durante el ensayo (al pasar de aprox piston a compresion, a retroceso de piston, a bajada PConf, etc), o saltar a una emergencia.
+
+Por ultimo, en un monton de paneles de la HMI y en un monton de bloques del Grafcet, agrego la opcion/el salto de una parada de emergencia. Si se dispara con el golpe de puño "Parada de Emergencia" (o con dos condiciones durante aprox piston y compresion que nunca se deberian alcanzar), las presiones de piston y confinamiento bajan rapido y termina el ensayo en el acto.
+Si se dispara desde un boton de "Cancelar" en la HMI, las presiones bajan mas suavemente, siguiendo una rampa y con un PID, y el ensayo termina luego de esto.
+
+Queda pendiente (mirar cómo implementarlo del .project del proyecto anterior) la visualizacion web. No nos dieron los tiempos.
+
+Todo lo que hay de aca hacia abajo son notas desprolijas y delirios que me acompañaron durante la programacion, de los que no me hago cargo, pero que de algo en una de esas pueden servir.
+
+-----------------------------------------------------------------------
+
+-dimensiones probeta: se podria agregar, en el futuro, la posibilidad de ingresar dimensiones en inches
+
+
+575kN Faxial max? fake
+con Pp=315bar:
+556,65kN (Pconf=0)
+495kN (Pconf=420bar)
+494kN aprox con Fg, Fc (Pconf=420bar)
+
+con Pp=300bar:
+530kN (Pconf=0)
+471,8kN (Pconf=400bar)
+470,3kN (Pconf=400bar, con Fg, Fc)
+
+Sigma: 1134,7MPa (575kN, fake)
+Pp=315bar, Pconf=0 o 420bar:
+1098,5MPa (556,65kN)
+976,9 MPa (495kN)
+974,9MPa (494kN)
+
+Pp=300bar, Pconf=0 o 400bar:
+1046MPa (530kN)
+931,1 MPa (471,8kN)
+928,1MPa (470,3kN)
+
+sigma dev:
+Pp=315bar, Pconf=0 o 420bar:
+1098,5MPa (556,65kN)
+934,9 MPa (495kN)
+932,9MPa (494kN)
+
+Pp=300bar, Pconf=0 o 400bar:
+1046MPa (530kN)
+891,1 MPa (471,8kN)
+888,1MPa (470,3kN)
+
+so, limites: 
+para tri/uniaxial:
+400-300bar
+Faxial sin limite (podria ser 600kN, mayor que el max posible de 556 o 530kN; o podria limitar a 450kN x ej),
+sigma dev sin limite (podria ser 1200MPa, mayor que el max posible de 1098 o 1046MPa; o podria limitar a 800MPa x ej, equivalentes a 405kN con Pc=0 o 484kN con Pc=40MPa)
+
+para ultrasonicos: limito por fuerza sobre los ultrasonicos! no mas que 50kN ponele? que serian unos 98,7MPa de tension, y entre 98,7 y 58,7MPa de tension deviatorica, sobre ultrasonicos y probeta
+
+podria poner a 470-490kN de F axial,
+
+420bar conf max
+315 bar piston max
+pag66,75,76,77,78
+
+Aph=17671.458676 mm2
+Apm=1963.495408 mm2
+Apr= 3.141593 * d^2 / 4 
+Fg=63.832 N
+Fc=1433.3 N //Guardone: 198N
+Cv=8.065e+7 N s/m
+V=calcular en base a avance piston y vel def
+para 0.2e-6*50.8mm/s-->V=10,16e-6mm/s=10,16e-9m/s
+-->Cv*V=0,819N?? tan poco??asi parece :)
+
+Faxial = Pp*Aph-Pc*(Apm-Apr)-Fg-Fc-Cv*V
+S      =(Pp*Aph-Pc*(Apm-Apr)-Fg-Fc-Cv*V)/Apr
+Sd     =(Pp*Aph-Pc*Apm      -Fg-Fc-Cv*V)/Apr
+
+Vp=1.302849*(Pp-225.4)+400
+Vc=1.532453*(Pc-363.7)+400
+/\Lsujetadores = 7.14e-7 * Faxial
+/\LLVDText=0.937*I-3.94
+/\LLVDT1=-0.264*V+26.92
+/\LVDT2=-0.257*V+27.13
+/\Dsg3=0.178*V+96.69
+/\Dsg4=-0.143*V+96.96
+
+Ppiston 20-30bar = 10ksi-15ksi, 69-103MPa
+
+-agregar maximos: velconf, veldef, tensiondev, tensiondevult
+
+-sg3, sg4
+
+-informe: valv conf QW0, valv piston QW1
+(segun plano. Despues, el texto del informe esta mal/al reves)
+-sens conf IW0, sens piston IW1
+-LVDTint1 IW3, LVDTint2 IW4, LVDText IW5
+-SG3 IW6, SG4 IW7
+
+-areas pistones, pesos, fricciones
+-fb, ffw ctes
+
+_SoM.MyController.Application.SR_Main.VelPConf<0 
+
+Motor1, Motor2, ValoresEnsayoOk
+
+ErrorCode viene del proyecto anterior, lo dejo hasheado por si alguien lo quiere volver a usar
+
+if (_SoM.MyController.Application.MAIN.TipoEnsayo.getIntValue()==0)
+{
+_CurPanelID.write(13);
+}
+else
+_CurPanelID.write(17);
+
+
+velPConf esta en bar/min
+velDeformacion en mm/mm/s
+SDevLimite en MPa
+
+Convierto las entradas en strings. Voy a registrar (en s, mm, kN, MPa, ue o unidades afines):
+Tiempo, PConf, PPist, AvancePist, Faxial, Saxial, SDev, DefAxial, DefRadial, DefVol, Estado
+
+los bloques se ejecutan de arriba a abajo, izq a der (makes sense). guarda con ejecutar: calculo def, calculo pconf, log y lo demas. en que orden hacerlo.
+
+tengo en paralelo:
+-calculo de e1, e2, eVol
+-ctrl PConf (rampa, llego al endpoint: cte y seteo una sola vez el contacto)
+
+-cuando contacto=TRUE: ctrl avance con ctrl PPist (mantengo el ctrl PConf)
+
+-cuando SG1>SG1Init+10: reset contacto, set contactOk, set flancoCT, tomo valores iniciales para e1init, RampaDef, LVDTContact, uOutPBase, reseteo valores dentro de RampGenWReset (RampaLVDT) y MyPID (uOutP)
+
+-cuando ContactOk=TRUE: ctrl compresion. comprimo a def cte hasta que le doy al puls rojo: reset contactOk, set ComprimirStop, resetNuevaEtapa
+(estan al reves los reset del MyPIDReal wexd)
+
+-cuando ComprimirStop=TRUE: ctrl descompresion a def cte. Cuando e1<e1Init o LVDT<LVDTContact, seteo descargaOk y reseteo ComprimirStop
+
+-cuando descargaO=TRUE: ctrl retorno piston hasta que LVDT<PistonAbajo: reset DescargaOk, set RetornoOk.
+-iEtapa++, No mas etapas, nueva etapa, reset presionConfOk
+
+si no mas etapas-->EtapaFinalizar
+si mas etapas-->siguienteEtapa, voy a buscar una nueva PConf, luego avance, compresion, descompresion, retroceso.
+
+EtapaFinalizar: de ahi en adelante se embarra un poco pero basicamente, bajar ValvulaPiston al minimo, bajar PConf lento hasta su minimo de presion, luego ValvulaConf al minimo.
+
+Resetear bloques de pid y variables. cosas de visualizacion. Volver al inicio.
+
+mi idea (al menos para triaxial):
+Inputs2Var2Log: calculo PConf, PPist, AvancePist (conversion de bits a unidad), Faxial, Saxial, SDev (calculos con areas y presiones), DefAxial, DefRadial (conversion de bits a unidad y calculos con alturaProbeta), DefVol (calculo con deformaciones)
+
+SubidaPConf: rampa y pid de pconf, transicion al llegar a valor estable y fin de la rampa
+
+AproxPiston: pid de pconf con valor cte, rampa y pid de lvdt con ppist, transicion al llegar al fin de la rampa (error) o al registrar defAxial
+
+Compresion: pid de pconf con valor cte, rampa y pid de def axial con ppist, transicion al presionar boton rojo o llegar a SDev limite
+
+Descompresion: pid de pconf con valor cte, rampa y pid de def axial con ppist, transicion al llegar a def axial minima o avance piston menor al de contacto
+
+RetrocesoPiston: pid de pconf con valor cte, rampa y pid de lvdt con ppist.
+Y aca me gustaria: al llegar al final de la rampa (punto muerto inf), valvula piston baja a 0, luego transicion. REVISAR INFORME.
+
+BajadaPConf: la sacaria e iria directo a i)nueva etapa, SubidaPConf (que tb podria ser bajada), o ii)bajadaPConf propiamente dicha, bajar a 0 y terminar ensayo.
+
+alternativa: bajo PPist a 0, PConf siempre a 0, y ahi veo si termino o arranco otra etapa.
+
+inputs2var deberia ir a la izq de las demas ramas creo
+
+dummy (uniaxial): que pase de estado 1 a estado 2 maybe
+
+no le tengas miedo al exito! ahora a codear el control! no olvidar el cambio de estado. que sirve como transicion. mañana detalles y el vijeo!
+
+function: sin internal memory, mismos inputs, mismo output (1 solo)
+
+function block: internal memory, mismos inputs, no siempre mismos outputs (1 o mas)
+
+paso a aprox piston: hay algo que cambiar en la entrada?
+
+me falta poner las emergencias en todos lados :)
+
+agrego emergencias adicionales si:
+-en la aproxPiston, supero cierto avance limite
+-en la compresion, supero cierta deformacion limite o avance limite
+(no pongo nada en los retrocesos)
+
+guarda que iEtapa=0 significa etapa 1 en la visualizacion
+
+bloque de emergencia antes de finalizar ensayo: si Emergencia=TRUE, hago cosas, si no, sigo de largo
+
+pendiente: rutina post ensayo uniaxial
+
+atencion al XYGraph, es bastante mala/confusa la documentacion
+La unica documentacion es este script del .project anterior, desactualizado, de Guardone:
+-----------------------------------------------------------------------
+// Shifteo el array y busco el mínimo y el máximo
+//MinDefVol:=REAL_TO_INT(DefVol);
+int iDatos=0;
+int ApistH=17671; 
+float Apist=1963.5f;
+float Fgrav=63.832f;
+int FrCin=198;
+float PresionConfinamientoMPa;
+float PresionPistonMPa;    
+int MinDefVol;
+int MaxDefVol;
+int MinDefAx;
+int MaxDefAx;
+int MinTenDev;
+int MaxTenDev;
+float TensionDev;
+float DefVol=_SoM.MyController.Application.MAIN.DefVol.getFloatValue();
+float DefAx=_SoM.MyController.Application.MAIN.e1.getFloatValue()*1000000;
+int ScaleSwap;
+
+if (trigger.getIntValue()==0)
+      trigger.write(1);
+else
+      trigger.write(0);
+
+	
+PresionConfinamientoMPa=_SoM.MyController.Application.MAIN.PresionConfinamiento.getIntValue()*0.0063636f-0.63636f;
+PresionPistonMPa=_SoM.MyController.Application.MAIN.PresionPiston.getIntValue()*0.0040404f-0.40404f;
+TensionDev=(PresionPistonMPa*ApistH-PresionConfinamientoMPa*(Apist-_SoM.MyController.Application.MAIN.AMuestra.getFloatValue())-Fgrav-FrCin)/(_SoM.MyController.Application.MAIN.AMuestra.getFloatValue()); // En MPa
+TensionDev=TensionDev*10 - (_SoM.MyController.Application.MAIN.PresionConfinamiento.getIntValue()*0.063636f-6.3636f); // Conversion a Bar	
+
+
+if (CambioGrafico.getIntValue()==1)
+{
+	CambioGrafico.write(0);
+	while (iDatos < 512) // largo de vector de datos
+	{	
+		Datos3[iDatos].write(Datos[iDatos].getIntValue());
+		Datos[iDatos].write(Datos2[iDatos].getIntValue());
+		Datos2[iDatos].write(Datos3[iDatos].getIntValue());
+		iDatos=iDatos+1;
+	}
+	iDatos=0;
+	// Cambio las escalas
+}
+
+// Shifteo el array y busco el mínimo y el máximo
+MinDefVol=(int)(DefVol);
+MinDefAx=(int)(DefAx);
+//MinDefVol=(int)(_SoM.MyController.Application.MAIN.VolSim.getFloatValue());
+MaxDefVol=MinDefVol;
+MaxDefAx=MinDefAx;
+MinTenDev=(int)(TensionDev);
+//MinTenDev=(int)(_SoM.MyController.Application.MAIN.TenSim.getFloatValue());
+MaxTenDev=MinTenDev;
+	
+if (_SoM.MyController.Application.MAIN.FlancoCT.getIntValue()==1) // Si es la primera vez que entro inicializo el vector de datos
+{
+	_SoM.MyController.Application.MAIN.FlancoCT.write(0); // Finaliza la primera entrada	
+	while (iDatos < 512) // largo de vector de datos
+	{	
+		Datos[iDatos].write(MaxDefVol);
+		Datos[iDatos+1].write(MaxTenDev);
+		Datos2[iDatos].write(MaxDefAx);
+		Datos2[iDatos+1].write(MaxTenDev);
+		iDatos=iDatos+2;
+	}
+	iDatos=0;
+
+	TenScaleL.write(-200);
+	TenScaleH.write(200);
+	DefScaleL.write(-200);
+	DefScaleH.write(200);
+}
+else
+{	
+	if (GraficoVol.getIntValue()==0)
+	{	
+		// Escribo Datos desde la ultima posicion y shifteo el vector
+		while (iDatos < 510) // largo del vector de datos menos 2	
+		{     // shifteo el vector
+			Datos[iDatos].write(Datos[iDatos+2].getIntValue()); // shifteo el vector
+			Datos[iDatos+1].write(Datos[iDatos+3].getIntValue()); // shifteo el vector
+			// Identifico el máximo y el mínimo de tensión deviatórica y deformación volumétrica
+			if (Datos[iDatos].getIntValue()>MaxDefVol)
+				MaxDefVol=Datos[iDatos].getIntValue();
+			if (Datos[iDatos].getIntValue()<MinDefVol)
+				MinDefVol=Datos[iDatos].getIntValue();
+			if (Datos[iDatos+1].getIntValue()>MaxTenDev)
+				MaxTenDev=Datos[iDatos+1].getIntValue();
+			if (Datos[iDatos+1].getIntValue()<MinTenDev)
+				MinTenDev=Datos[iDatos+1].getIntValue();
+
+			Datos2[iDatos].write(Datos2[iDatos+2].getIntValue());
+			Datos2[iDatos+1].write(Datos2[iDatos+3].getIntValue());
+			if (Datos2[iDatos].getIntValue()>MaxDefAx)
+				MaxDefAx=Datos2[iDatos].getIntValue();
+			if (Datos2[iDatos].getIntValue()<MinDefAx)
+				MinDefAx=Datos2[iDatos].getIntValue();
+		
+			iDatos=iDatos+2;
+	}
+
+	iDatos=0;
+	Datos[510].write((int)DefVol);
+	Datos[511].write((int)TensionDev);
+	Datos2[510].write((int)DefAx);
+	Datos2[511].write((int)TensionDev);
+	}
+	else
+	{	
+		// Escribo Datos desde la ultima posicion y shifteo el vector
+		while (iDatos < 510) // largo del vector de datos menos 2	
+		{     // shifteo el vector
+			Datos2[iDatos].write(Datos2[iDatos+2].getIntValue()); // shifteo el vector
+			Datos2[iDatos+1].write(Datos2[iDatos+3].getIntValue()); // shifteo el vector
+			// Identifico el máximo y el mínimo de tensión deviatórica y deformación volumétrica
+			if (Datos2[iDatos].getIntValue()>MaxDefVol)
+				MaxDefVol=Datos2[iDatos].getIntValue();
+			if (Datos2[iDatos].getIntValue()<MinDefVol)
+				MinDefVol=Datos2[iDatos].getIntValue();
+			if (Datos2[iDatos+1].getIntValue()>MaxTenDev)
+				MaxTenDev=Datos2[iDatos+1].getIntValue();
+			if (Datos2[iDatos+1].getIntValue()<MinTenDev)
+				MinTenDev=Datos2[iDatos+1].getIntValue();
+
+			Datos[iDatos].write(Datos[iDatos+2].getIntValue());
+			Datos[iDatos+1].write(Datos[iDatos+3].getIntValue());
+			if (Datos[iDatos].getIntValue()>MaxDefAx)
+				MaxDefAx=Datos[iDatos].getIntValue();
+			if (Datos[iDatos].getIntValue()<MinDefAx)
+				MinDefAx=Datos[iDatos].getIntValue();
+		
+			iDatos=iDatos+2;
+		}
+
+		iDatos=0;
+		Datos2[510].write((int)DefVol);
+		Datos2[511].write((int)TensionDev);
+		Datos[510].write((int)DefAx);
+		Datos[511].write((int)TensionDev);
+	}
+	//Datos[78].write((int)(_SoM.MyController.Application.MAIN.VolSim.getFloatValue()));
+	//Datos[79].write((int)(_SoM.MyController.Application.MAIN.TenSim.getFloatValue()));
+}
+
+// Limites eje de tension para el grafico del display
+if ((MinTenDev-TenScaleL.getIntValue())<15)// Se acerca al limite inferior
+	TenScaleL.write(TenScaleL.getIntValue()-300); // alejo el limite inferior
+if ((TenScaleH.getIntValue()-MaxTenDev)<15) // se acerca al limite superior
+	TenScaleH.write(TenScaleH.getIntValue()+300); // alejo el limite superior
+if ((MinTenDev-TenScaleL.getIntValue())>600) // Se aleja del limite inferior
+	TenScaleL.write(TenScaleL.getIntValue()+400); // acerco el limite inferior
+if ((TenScaleH.getIntValue()-MaxTenDev)>600) // se aleja del limite superior
+	TenScaleH.write(TenScaleH.getIntValue()-400); // acerco el limite superior
+
+// Limites eje de deformacion para el grafico del display
+if ((MinDefVol-DefVolScaleL.getIntValue())<15) // Se acerca al limite inferior
+	DefVolScaleL.write(DefVolScaleL.getIntValue()-300); // alejo el limite inferior
+if ((DefVolScaleH.getIntValue()-MaxDefVol)<15) // se acerca al limite superior
+	DefVolScaleH.write(DefVolScaleH.getIntValue()+300); // alejo el limite superior
+if ((MinDefVol-DefVolScaleL.getIntValue())>400) // Se aleja del limite inferior
+	DefVolScaleL.write(DefVolScaleL.getIntValue()+300); // acerco el limite inferior
+if ((DefVolScaleH.getIntValue()-MaxDefVol)>400) // se aleja del limite superior
+	DefVolScaleH.write(DefVolScaleH.getIntValue()-300); // acerco el limite superior
+	
+	// Limites eje de deformacion para el grafico del display
+if ((MinDefAx-DefAxScaleL.getIntValue())<15) // Se acerca al limite inferior
+	DefAxScaleL.write(DefAxScaleL.getIntValue()-300); // alejo el limite inferior
+if ((DefAxScaleH.getIntValue()-MaxDefAx)<15) // se acerca al limite superior
+	DefAxScaleH.write(DefAxScaleH.getIntValue()+300); // alejo el limite superior
+if ((MinDefAx-DefAxScaleL.getIntValue())>400) // Se aleja del limite inferior
+	DefAxScaleL.write(DefAxScaleL.getIntValue()+300); // acerco el limite inferior
+if ((DefAxScaleH.getIntValue()-MaxDefAx)>400) // se aleja del limite superior
+	DefAxScaleH.write(DefAxScaleH.getIntValue()-300); // acerco el limite superior
+	
+if (GraficoVol.getIntValue()==1)
+{	
+	DefScaleL.write(DefAxScaleL.getIntValue());
+	DefScaleH.write(DefAxScaleH.getIntValue());
+}
+else
+{
+	DefScaleL.write(DefVolScaleL.getIntValue());
+	DefScaleH.write(DefVolScaleH.getIntValue());
+}
+	//TenScaleL.write(MinTenDev-80);
+	//TenScaleH.write(MaxTenDev+80);
+	//DefScaleL.write(MinDefVol-80);
+	//DefScaleH.write(MaxDefVol+80);
+-----------------------------------------------------------------------
+listos los graficos, seguir con transicion a la prox etapa
+
+if (_SoM.MyController.Application.SR_Main.TipoEnsayo.getIntValue()==0) //Triaxial
+{
+	if (_SoM.MyController.Application.SR_Main.Estado.getIntValue()==5) //Paso de descompresion a retroceso del piston
+	{
+		_CurPanelID.write(23);
+	}
+}
+if (_SoM.MyController.Application.SR_Main.TipoEnsayo.getIntValue()==1) //Uniaxial
+{
+	if (_SoM.MyController.Application.SR_Main.Estado.getIntValue()==7) //Paso de descompresion a esperar la rutina de post ensayo
+	{
+		_CurPanelID.write(26);
+	}
+}
+
+anda a saber si los limites de los manometros se actualizan despues de iniciado el programa, periodicamente, en todo momento, etc...
+esta todo programado como para que se actualice en todo momento (o periodicamente cada poco tiempo, asi cambian los limites cuando entro en una nueva etapa)
+
+_SoM.MyController.Application.SR_Main.Estado==4
+
+motor1--> confinamiento, el que enciendo primero y apago ultimo
+motor2--> piston
